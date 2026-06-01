@@ -1,132 +1,197 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-  <title>Live Dashboard</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Google Sheet Dashboard</title>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
-
-    body{
-      font-family:Arial;
-      background:#f5f5f5;
-      padding:20px;
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 20px;
     }
 
-    .card{
-      background:white;
-      padding:20px;
-      border-radius:10px;
-      margin-bottom:20px;
-      box-shadow:0 2px 10px rgba(0,0,0,0.1);
+    .card {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
 
-    table{
-      width:100%;
-      border-collapse:collapse;
+    h2 {
+      margin-top: 0;
     }
 
-    th,td{
-      border:1px solid #ddd;
-      padding:10px;
+    .chart-container {
+      height: 400px;
     }
 
-    th{
-      background:black;
-      color:white;
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
     }
 
+    th,
+    td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+    }
+
+    th {
+      background: #000;
+      color: white;
+      position: sticky;
+      top: 0;
+    }
+
+    tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+
+    tr:hover {
+      background: #f1f1f1;
+    }
+
+    .table-container {
+      max-height: 500px;
+      overflow-y: auto;
+    }
   </style>
-
 </head>
 
 <body>
 
-<div class="card">
-  <h2>Live Google Sheet Dashboard</h2>
-  <canvas id="myChart"></canvas>
-</div>
+  <div class="card">
+    <h2>📊 Live Google Sheet Dashboard</h2>
 
-<div class="card">
+    <div class="chart-container">
+      <canvas id="myChart"></canvas>
+    </div>
+  </div>
 
-<table id="dataTable">
+  <div class="card">
+    <h2>📋 Sheet Data</h2>
 
-<thead></thead>
-<tbody></tbody>
+    <div class="table-container">
+      <table id="dataTable">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
 
-</table>
+  <script>
 
-</div>
+    const CSV_URL =
+      "https://docs.google.com/spreadsheets/d/e/2PACX-1vSmMQ61nTN0z7DyrVUJntuEm_zXVbukY5P56YsDU0wlDWhLoybtlVp3kcx96F8ZyD7segyJQlnSKZNq/pub?gid=1309836775&single=true&output=csv";
 
-<script>
+    fetch(CSV_URL)
+      .then(response => response.text())
+      .then(csv => {
 
-const API_URL =
-"https://opensheet.elk.sh/1g_4SBQ5vlZAVpCf229v6hl4dhiHrK9mWu5M0ld97K5E/Sheet1";
+        const rows = csv.trim().split("\n");
 
-fetch(API_URL)
-.then(res => res.json())
-.then(data => {
+        const headers = rows[0]
+          .split(",")
+          .map(h => h.replace(/"/g, "").trim());
 
-console.log(data);
+        const data = rows.slice(1).map(row => {
 
-const headers = Object.keys(data[0]);
+          const values = row.split(",");
 
-// TABLE
+          let obj = {};
 
-let headRow = "<tr>";
+          headers.forEach((header, index) => {
+            obj[header] = values[index]
+              ? values[index].replace(/"/g, "").trim()
+              : "";
+          });
 
-headers.forEach(h=>{
- headRow += `<th>${h}</th>`;
-});
+          return obj;
+        });
 
-headRow += "</tr>";
+        // TABLE HEADER
 
-document.querySelector("#dataTable thead").innerHTML = headRow;
+        let headRow = "<tr>";
 
+        headers.forEach(header => {
+          headRow += `<th>${header}</th>`;
+        });
 
-// BODY
+        headRow += "</tr>";
 
-let bodyRows = "";
+        document.querySelector("#dataTable thead").innerHTML = headRow;
 
-data.forEach(row=>{
+        // TABLE BODY
 
- bodyRows += "<tr>";
+        let bodyRows = "";
 
- headers.forEach(h=>{
-   bodyRows += `<td>${row[h]}</td>`;
- });
+        data.forEach(row => {
 
- bodyRows += "</tr>";
+          bodyRows += "<tr>";
 
-});
+          headers.forEach(header => {
+            bodyRows += `<td>${row[header]}</td>`;
+          });
 
-document.querySelector("#dataTable tbody").innerHTML = bodyRows;
+          bodyRows += "</tr>";
 
+        });
 
-// CHART
+        document.querySelector("#dataTable tbody").innerHTML = bodyRows;
 
-const labels = data.map(r => r[headers[0]]);
-const values = data.map(r => Number(r[headers[1]]));
+        // CHART
 
-new Chart(document.getElementById('myChart'), {
+        const labels = data.map(item => item[headers[0]]);
+        const values = data.map(item => Number(item[headers[1]]) || 0);
 
- type:'bar',
+        new Chart(document.getElementById("myChart"), {
 
- data:{
-   labels:labels,
+          type: "bar",
 
-   datasets:[{
-     label:headers[1],
-     data:values
-   }]
- }
+          data: {
+            labels: labels,
+            datasets: [{
+              label: headers[1],
+              data: values
+            }]
+          },
 
-});
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: true
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true
+              }
+            }
+          }
 
-});
+        });
 
-</script>
+      })
+      .catch(error => {
+        console.error("Error loading CSV:", error);
+
+        document.querySelector("#dataTable tbody").innerHTML =
+          `<tr><td colspan="100%">Failed to load Google Sheet data.</td></tr>`;
+      });
+
+  </script>
 
 </body>
+
 </html>
