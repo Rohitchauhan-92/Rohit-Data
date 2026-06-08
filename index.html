@@ -3,133 +3,618 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Professional Employee Dashboard V2</title>
+
+<title>Employee Performance Dashboard</title>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
 <style>
-body{margin:0;font-family:Segoe UI,Arial;background:#0f172a;color:#fff}
-.header{padding:20px}
-.filters,.kpis{display:grid;gap:12px}
-.filters{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));padding:0 20px}
-.kpis{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));padding:20px}
-.card{background:#1e293b;border-radius:12px;padding:15px}
-.kpi{background:#111827;border-radius:12px;padding:15px}
-.kpi h4{margin:0;color:#cbd5e1}.kpi h2{margin:8px 0}
-select,input{padding:10px;border-radius:8px;border:none}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:0 20px 20px}
-table{width:100%;border-collapse:collapse}
-th,td{border:1px solid #334155;padding:6px;font-size:12px}
-th{background:#020617;position:sticky;top:0}
-.tbl{max-height:400px;overflow:auto}
-@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+
+*{
+box-sizing:border-box;
+}
+
+body{
+margin:0;
+font-family:Segoe UI,Arial,sans-serif;
+background:#0f172a;
+color:white;
+}
+
+.header{
+padding:20px;
+}
+
+.filters{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:12px;
+padding:0 20px 20px;
+}
+
+.filters select,
+.filters input{
+padding:10px;
+border:none;
+border-radius:8px;
+}
+
+.kpis{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+gap:12px;
+padding:0 20px 20px;
+}
+
+.kpi{
+background:#1e293b;
+padding:15px;
+border-radius:12px;
+}
+
+.kpi h4{
+margin:0;
+color:#cbd5e1;
+}
+
+.kpi h2{
+margin:10px 0 0;
+}
+
+.card{
+background:#1e293b;
+margin:0 20px 20px;
+padding:15px;
+border-radius:12px;
+}
+
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:20px;
+padding:0 20px;
+}
+
+.chart-box{
+background:#1e293b;
+padding:15px;
+border-radius:12px;
+}
+
+canvas{
+background:white;
+border-radius:8px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th,td{
+border:1px solid #334155;
+padding:8px;
+font-size:12px;
+}
+
+th{
+background:#020617;
+position:sticky;
+top:0;
+}
+
+.table-container{
+max-height:450px;
+overflow:auto;
+}
+
+.profile{
+line-height:1.8;
+}
+
+@media(max-width:900px){
+
+.grid{
+grid-template-columns:1fr;
+}
+
+}
+
 </style>
+
 </head>
+
 <body>
-<div class="header"><h1>📊 Employee Performance Dashboard</h1></div>
+
+<div class="header">
+<h1>📊 Employee Performance Dashboard</h1>
+</div>
 
 <div class="filters">
-<select id="monthFilter"><option value="All">All Months</option></select>
-<select id="employee"><option value="All">All Employees</option></select>
-<input id="search" placeholder="Search employee">
+
+<select id="monthFilter">
+<option value="All">All Months</option>
+</select>
+
+<select id="employeeFilter">
+<option value="All">All Employees</option>
+</select>
+
+<input
+type="text"
+id="searchBox"
+placeholder="Search Employee">
+
 </div>
 
 <div class="kpis">
-<div class="kpi"><h4>Total Employees</h4><h2 id="emp">0</h2></div>
-<div class="kpi"><h4>Total Actual Mins</h4><h2 id="actual">0</h2></div>
-<div class="kpi"><h4>Total OT Mins</h4><h2 id="ot">0</h2></div>
-<div class="kpi"><h4>Attendance</h4><h2 id="att">0</h2></div>
-<div class="kpi"><h4>Leave</h4><h2 id="leave">0</h2></div>
-<div class="kpi"><h4>Absent</h4><h2 id="absent">0</h2></div>
-<div class="kpi"><h4>Weekoff</h4><h2 id="wo">0</h2></div>
-<div class="kpi"><h4>Holiday</h4><h2 id="holiday">0</h2></div>
+
+<div class="kpi">
+<h4>Total Employees</h4>
+<h2 id="empCount">0</h2>
 </div>
 
-<div class="grid2">
-<div class="card"><h3>Actual Minutes</h3><canvas id="actualChart"></canvas></div>
-<div class="card"><h3>OT Minutes</h3><canvas id="otChart"></canvas></div>
+<div class="kpi">
+<h4>Total Actual Working Mins</h4>
+<h2 id="actualMins">0</h2>
 </div>
 
-<div class="grid2">
-<div class="card"><h3>Top Performers</h3><div class="tbl"><table id="rank"><thead><tr><th>Rank</th><th>Name</th><th>Actual</th></tr></thead><tbody></tbody></table></div></div>
-<div class="card"><h3>Employee Profile</h3><div id="profile">Select an employee</div></div>
+<div class="kpi">
+<h4>Total OT Mins</h4>
+<h2 id="otMins">0</h2>
 </div>
 
-<div class="card" style="margin:20px"><h3>Data Table</h3><div class="tbl"><table id="data"><thead></thead><tbody></tbody></table></div></div>
+<div class="kpi">
+<h4>Total Leave</h4>
+<h2 id="leaveCount">0</h2>
+</div>
+
+<div class="kpi">
+<h4>Total Absent</h4>
+<h2 id="absentCount">0</h2>
+</div>
+
+<div class="kpi">
+<h4>Total Weekoff</h4>
+<h2 id="woCount">0</h2>
+</div>
+
+</div>
+
+<div class="card">
+<h2>👤 Employee Profile</h2>
+<div id="profile" class="profile">
+Select an employee
+</div>
+</div>
+
+<div class="grid">
+
+<div class="chart-box">
+<h3>Actual Working Minutes</h3>
+<canvas id="actualChart"></canvas>
+</div>
+
+<div class="chart-box">
+<h3>OT Minutes</h3>
+<canvas id="otChart"></canvas>
+</div>
+
+</div>
+
+<div class="card">
+
+<h2>🏆 Top Performers</h2>
+
+<div class="table-container">
+
+<table>
+
+<thead>
+<tr>
+<th>Rank</th>
+<th>Name</th>
+<th>Actual Working Mins</th>
+</tr>
+</thead>
+
+<tbody id="rankingBody"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h2>📋 Full Data</h2>
+
+<div class="table-container">
+
+<table id="dataTable">
+
+<thead></thead>
+
+<tbody></tbody>
+
+</table>
+
+</div>
+
+</div>
 
 <script>
-const CSV_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vSmMQ61nTN0z7DyrVUJntuEm_zXVbukY5P56YsDU0wlDWhLoybtlVp3kcx96F8ZyD7segyJQlnSKZNq/pub?gid=1309836775&single=true&output=csv";
-let allData=[],headers=[];
-function num(v){return Number(String(v||"0").replace(/,/g,''))||0}
 
-Papa.parse(CSV_URL,{download:true,header:true,skipEmptyLines:true,complete:r=>{
-allData=r.data.filter(x=>x["Name"]);
-headers=Object.keys(allData[0]||{});
+const CSV_URL =
+"https://docs.google.com/spreadsheets/d/e/2PACX-1vSmMQ61nTN0z7DyrVUJntuEm_zXVbukY5P56YsDU0wlDWhLoybtlVp3kcx96F8ZyD7segyJQlnSKZNq/pub?gid=1309836775&single=true&output=csv";
 
-document.querySelector("#data thead").innerHTML="<tr>"+headers.map(h=>"<th>"+h+"</th>").join("")+"</tr>";
+let allData = [];
+let headers = [];
 
-[...new Set(allData.map(x=>x["Name"]))].sort().forEach(n=>employee.innerHTML+=`<option value="${n}">${n}</option>`);
+function num(value){
 
-const months=[...new Set(allData.map(r=>{
- let d=new Date(r["Date"]);
- return isNaN(d) ? "" : d.toLocaleString('default',{month:'short',year:'numeric'});
-}).filter(Boolean))];
+return Number(
+String(value || "0")
+.replace(/,/g,"")
+) || 0;
 
-months.sort().forEach(m=>monthFilter.innerHTML+=`<option value="${m}">${m}</option>`);
+}
+
+Papa.parse(CSV_URL,{
+
+download:true,
+header:true,
+skipEmptyLines:true,
+
+complete:function(results){
+
+allData = results.data.filter(
+row => row["Name"]
+);
+
+headers =
+Object.keys(allData[0] || {});
+
+document.querySelector(
+"#dataTable thead"
+).innerHTML =
+"<tr>" +
+headers.map(
+h => `<th>${h}</th>`
+).join("") +
+"</tr>";
+
+const employees =
+[
+...new Set(
+allData.map(
+x => x["Name"]
+)
+)
+];
+
+employees.sort();
+
+employees.forEach(emp => {
+
+employeeFilter.innerHTML +=
+`<option value="${emp}">
+${emp}
+</option>`;
+
+});
+
+const months =
+[
+...new Set(
+allData.map(row => {
+
+const d =
+new Date(row["Date"]);
+
+if(isNaN(d))
+return "";
+
+return d.toLocaleString(
+"default",
+{
+month:"short",
+year:"numeric"
+});
+
+})
+)
+].filter(Boolean);
+
+months.sort();
+
+months.forEach(month => {
+
+monthFilter.innerHTML +=
+`<option value="${month}">
+${month}
+</option>`;
+
+});
 
 applyFilters();
-}});
+
+}
+
+});
 
 function applyFilters(){
-let rows=[...allData];
 
-if(monthFilter.value!=="All"){
- rows=rows.filter(r=>{
-  let d=new Date(r["Date"]);
-  if(isNaN(d)) return false;
-  return d.toLocaleString('default',{month:'short',year:'numeric'})===monthFilter.value;
- });
+let rows =
+[...allData];
+
+if(monthFilter.value !== "All"){
+
+rows = rows.filter(row => {
+
+const d =
+new Date(row["Date"]);
+
+if(isNaN(d))
+return false;
+
+return d.toLocaleString(
+"default",
+{
+month:"short",
+year:"numeric"
+}
+) === monthFilter.value;
+
+});
+
 }
 
-if(employee.value!=="All"){
- rows=rows.filter(r=>r["Name"]===employee.value);
+if(employeeFilter.value !== "All"){
+
+rows = rows.filter(
+row =>
+row["Name"] ===
+employeeFilter.value
+);
+
 }
 
-const txt=search.value.toLowerCase();
-if(txt){
- rows=rows.filter(r=>(r["Name"]||"").toLowerCase().includes(txt));
+const search =
+searchBox.value
+.toLowerCase();
+
+if(search){
+
+rows = rows.filter(
+row =>
+(row["Name"] || "")
+.toLowerCase()
+.includes(search)
+);
+
 }
 
 render(rows);
+
 }
 
 function render(rows){
-emp.innerText=[...new Set(rows.map(x=>x["Name"]))].length;
-actual.innerText=Math.round(rows.reduce((s,r)=>s+num(r["Actual Mins."]),0));
-ot.innerText=Math.round(rows.reduce((s,r)=>s+num(r["OT Mins."]),0));
-att.innerText=Math.round(rows.reduce((s,r)=>s+num(r["P"]),0));
-leave.innerText=Math.round(rows.reduce((s,r)=>s+num(r["Leave"]),0));
-absent.innerText=Math.round(rows.reduce((s,r)=>s+num(r["Absent"]),0));
-wo.innerText=Math.round(rows.reduce((s,r)=>s+num(r["WO"]),0));
-holiday.innerText=Math.round(rows.reduce((s,r)=>s+num(r["Holiday"]),0));
 
-const top=[...rows].sort((a,b)=>num(b["Actual Mins."])-num(a["Actual Mins."])).slice(0,20);
-rank.querySelector("tbody").innerHTML=top.map((r,i)=>`<tr><td>${i+1}</td><td>${r["Name"]}</td><td>${num(r["Actual Mins."])}</td></tr>`).join("");
+empCount.innerText =
+[
+...new Set(
+rows.map(
+x => x["Name"]
+)
+)
+].length;
 
-data.querySelector("tbody").innerHTML=rows.slice(0,500).map(r=>"<tr>"+headers.map(h=>`<td>${r[h]??""}</td>`).join("")+"</tr>").join("");
+actualMins.innerText =
+Math.round(
+rows.reduce(
+(sum,row)=>
+sum +
+num(
+row["Actual Working Mins."]
+),
+0
+)
+);
 
-if(window.c1)c1.destroy(); if(window.c2)c2.destroy();
-c1=new Chart(actualChart,{type:'bar',data:{labels:top.map(x=>x["Name"]),datasets:[{label:'Actual',data:top.map(x=>num(x["Actual Mins."]))}]}});
-c2=new Chart(otChart,{type:'bar',data:{labels:top.map(x=>x["Name"]),datasets:[{label:'OT',data:top.map(x=>num(x["OT Mins."]))}]}});
+otMins.innerText =
+Math.round(
+rows.reduce(
+(sum,row)=>
+sum +
+num(
+row["OT Mins."]
+),
+0
+)
+);
 
-if(employee.value!=="All" && rows.length){
- let r=rows[0];
- profile.innerHTML=`<b>${r["Name"]}</b><br>EMP ID: ${r["EMP ID"]||"-"}<br>Shift: ${r["Shift"]||"-"}<br>TL: ${r["Shift TL"]||"-"}`;
-} else profile.innerHTML="Select an employee";
+leaveCount.innerText =
+Math.round(
+rows.reduce(
+(sum,row)=>
+sum +
+num(row["Leave"]),
+0
+)
+);
+
+absentCount.innerText =
+Math.round(
+rows.reduce(
+(sum,row)=>
+sum +
+num(row["Absent"]),
+0
+)
+);
+
+woCount.innerText =
+Math.round(
+rows.reduce(
+(sum,row)=>
+sum +
+num(row["WO"]),
+0
+)
+);
+
+const top =
+[...rows]
+.sort(
+(a,b)=>
+num(
+b["Actual Working Mins."]
+)
+-
+num(
+a["Actual Working Mins."]
+)
+)
+.slice(0,20);
+
+rankingBody.innerHTML =
+top.map(
+(r,i)=>
+`
+<tr>
+<td>${i+1}</td>
+<td>${r["Name"]}</td>
+<td>${num(r["Actual Working Mins."])}</td>
+</tr>
+`
+).join("");
+
+document.querySelector(
+"#dataTable tbody"
+).innerHTML =
+rows.slice(0,500)
+.map(row =>
+"<tr>" +
+headers.map(
+h =>
+`<td>${row[h] || ""}</td>`
+).join("") +
+"</tr>"
+).join("");
+
+if(window.actualChartObj)
+actualChartObj.destroy();
+
+if(window.otChartObj)
+otChartObj.destroy();
+
+actualChartObj =
+new Chart(
+document.getElementById(
+"actualChart"
+),
+{
+type:"bar",
+data:{
+labels:
+top.map(
+x=>x["Name"]
+),
+datasets:[
+{
+label:
+"Actual Working Mins",
+data:
+top.map(
+x =>
+num(
+x["Actual Working Mins."]
+)
+)
+}
+]
+}
+}
+);
+
+otChartObj =
+new Chart(
+document.getElementById(
+"otChart"
+),
+{
+type:"bar",
+data:{
+labels:
+top.map(
+x=>x["Name"]
+),
+datasets:[
+{
+label:"OT Mins",
+data:
+top.map(
+x =>
+num(
+x["OT Mins."]
+)
+)
+}
+]
+}
+}
+);
+
+if(
+employeeFilter.value !== "All"
+&&
+rows.length
+){
+
+const emp =
+rows[0];
+
+profile.innerHTML =
+`
+<b>${emp["Name"]}</b><br>
+EMP ID:
+${emp["EMP ID"] || "-"}<br>
+
+Shift:
+${emp["Shift"] || "-"}<br>
+
+Shift TL:
+${emp["Shift TL"] || "-"}<br>
+
+Actual Working Mins:
+${emp["Actual Working Mins."] || 0}<br>
+
+OT Mins:
+${emp["OT Mins."] || 0}
+`;
+
+}else{
+
+profile.innerHTML =
+"Select an employee";
+
 }
 
-monthFilter.onchange=applyFilters;
-employee.onchange=applyFilters;
-search.oninput=applyFilters;
+}
+
+monthFilter.onchange =
+applyFilters;
+
+employeeFilter.onchange =
+applyFilters;
+
+searchBox.oninput =
+applyFilters;
+
 </script>
+
 </body>
 </html>
