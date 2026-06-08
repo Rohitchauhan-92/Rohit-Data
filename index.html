@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Professional Employee Dashboard</title>
+<title>Professional Employee Dashboard V2</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <style>
@@ -29,6 +28,7 @@ th{background:#020617;position:sticky;top:0}
 <div class="header"><h1>📊 Employee Performance Dashboard</h1></div>
 
 <div class="filters">
+<select id="monthFilter"><option value="All">All Months</option></select>
 <select id="employee"><option value="All">All Employees</option></select>
 <input id="search" placeholder="Search employee">
 </div>
@@ -50,71 +50,86 @@ th{background:#020617;position:sticky;top:0}
 </div>
 
 <div class="grid2">
-<div class="card">
-<h3>Top Performers</h3>
-<div class="tbl"><table id="rank"><thead><tr><th>Rank</th><th>Name</th><th>Actual</th></tr></thead><tbody></tbody></table></div>
-</div>
-<div class="card">
-<h3>Employee Profile</h3>
-<div id="profile">Select an employee</div>
-</div>
+<div class="card"><h3>Top Performers</h3><div class="tbl"><table id="rank"><thead><tr><th>Rank</th><th>Name</th><th>Actual</th></tr></thead><tbody></tbody></table></div></div>
+<div class="card"><h3>Employee Profile</h3><div id="profile">Select an employee</div></div>
 </div>
 
-<div class="card" style="margin:20px">
-<h3>Data Table</h3>
-<div class="tbl"><table id="data"><thead></thead><tbody></tbody></table></div>
-</div>
+<div class="card" style="margin:20px"><h3>Data Table</h3><div class="tbl"><table id="data"><thead></thead><tbody></tbody></table></div></div>
 
 <script>
 const CSV_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vSmMQ61nTN0z7DyrVUJntuEm_zXVbukY5P56YsDU0wlDWhLoybtlVp3kcx96F8ZyD7segyJQlnSKZNq/pub?gid=1309836775&single=true&output=csv";
 let allData=[],headers=[];
 function num(v){return Number(String(v||"0").replace(/,/g,''))||0}
 
-Papa.parse(CSV_URL,{
- download:true,header:true,skipEmptyLines:true,
- complete:r=>{
-  allData=r.data.filter(x=>x["Name"]);
-  headers=Object.keys(allData[0]||{});
-  document.querySelector("#data thead").innerHTML="<tr>"+headers.map(h=>"<th>"+h+"</th>").join("")+"</tr>";
-  [...new Set(allData.map(x=>x["Name"]))].sort().forEach(n=>employee.innerHTML+=`<option>${n}</option>`);
-  render(allData);
- }
-});
+Papa.parse(CSV_URL,{download:true,header:true,skipEmptyLines:true,complete:r=>{
+allData=r.data.filter(x=>x["Name"]);
+headers=Object.keys(allData[0]||{});
 
-function render(rows){
- emp.innerText=[...new Set(rows.map(x=>x["Name"]))].length;
- actual.innerText=Math.round(rows.reduce((s,r)=>s+num(r["Actual Mins."]),0));
- ot.innerText=Math.round(rows.reduce((s,r)=>s+num(r["OT Mins."]),0));
- att.innerText=Math.round(rows.reduce((s,r)=>s+num(r["P"]),0));
- leave.innerText=Math.round(rows.reduce((s,r)=>s+num(r["Leave"]),0));
- absent.innerText=Math.round(rows.reduce((s,r)=>s+num(r["Absent"]),0));
- wo.innerText=Math.round(rows.reduce((s,r)=>s+num(r["WO"]),0));
- holiday.innerText=Math.round(rows.reduce((s,r)=>s+num(r["Holiday"]),0));
+document.querySelector("#data thead").innerHTML="<tr>"+headers.map(h=>"<th>"+h+"</th>").join("")+"</tr>";
 
- const top=[...rows].sort((a,b)=>num(b["Actual Mins."])-num(a["Actual Mins."])).slice(0,20);
- rank.querySelector("tbody").innerHTML=top.map((r,i)=>`<tr><td>${i+1}</td><td>${r["Name"]}</td><td>${num(r["Actual Mins."])}</td></tr>`).join("");
+[...new Set(allData.map(x=>x["Name"]))].sort().forEach(n=>employee.innerHTML+=`<option value="${n}">${n}</option>`);
 
- data.querySelector("tbody").innerHTML=rows.slice(0,500).map(r=>"<tr>"+headers.map(h=>`<td>${r[h]??""}</td>`).join("")+"</tr>").join("");
+const months=[...new Set(allData.map(r=>{
+ let d=new Date(r["Date"]);
+ return isNaN(d) ? "" : d.toLocaleString('default',{month:'short',year:'numeric'});
+}).filter(Boolean))];
 
- if(window.c1) c1.destroy();
- if(window.c2) c2.destroy();
- c1=new Chart(actualChart,{type:'bar',data:{labels:top.map(x=>x["Name"]),datasets:[{label:'Actual',data:top.map(x=>num(x["Actual Mins."]))}]}});
- c2=new Chart(otChart,{type:'bar',data:{labels:top.map(x=>x["Name"]),datasets:[{label:'OT',data:top.map(x=>num(x["OT Mins."]))}]}});
+months.sort().forEach(m=>monthFilter.innerHTML+=`<option value="${m}">${m}</option>`);
 
- if(rows.length===1){
-   let r=rows[0];
-   profile.innerHTML=`<b>${r["Name"]}</b><br>EMP ID: ${r["EMP ID"]||"-"}<br>Shift: ${r["Shift"]||"-"}<br>TL: ${r["Shift TL"]||"-"}<br>Actual: ${r["Actual Mins."]||0}<br>OT: ${r["OT Mins."]||0}`;
- } else profile.innerHTML="Select an employee";
+applyFilters();
+}});
+
+function applyFilters(){
+let rows=[...allData];
+
+if(monthFilter.value!=="All"){
+ rows=rows.filter(r=>{
+  let d=new Date(r["Date"]);
+  if(isNaN(d)) return false;
+  return d.toLocaleString('default',{month:'short',year:'numeric'})===monthFilter.value;
+ });
 }
 
-employee.onchange=()=>{
- const v=employee.value;
- render(v==="All"?allData:allData.filter(x=>x["Name"]===v));
-};
-search.oninput=()=>{
- const s=search.value.toLowerCase();
- render(allData.filter(x=>(x["Name"]||"").toLowerCase().includes(s)));
-};
+if(employee.value!=="All"){
+ rows=rows.filter(r=>r["Name"]===employee.value);
+}
+
+const txt=search.value.toLowerCase();
+if(txt){
+ rows=rows.filter(r=>(r["Name"]||"").toLowerCase().includes(txt));
+}
+
+render(rows);
+}
+
+function render(rows){
+emp.innerText=[...new Set(rows.map(x=>x["Name"]))].length;
+actual.innerText=Math.round(rows.reduce((s,r)=>s+num(r["Actual Mins."]),0));
+ot.innerText=Math.round(rows.reduce((s,r)=>s+num(r["OT Mins."]),0));
+att.innerText=Math.round(rows.reduce((s,r)=>s+num(r["P"]),0));
+leave.innerText=Math.round(rows.reduce((s,r)=>s+num(r["Leave"]),0));
+absent.innerText=Math.round(rows.reduce((s,r)=>s+num(r["Absent"]),0));
+wo.innerText=Math.round(rows.reduce((s,r)=>s+num(r["WO"]),0));
+holiday.innerText=Math.round(rows.reduce((s,r)=>s+num(r["Holiday"]),0));
+
+const top=[...rows].sort((a,b)=>num(b["Actual Mins."])-num(a["Actual Mins."])).slice(0,20);
+rank.querySelector("tbody").innerHTML=top.map((r,i)=>`<tr><td>${i+1}</td><td>${r["Name"]}</td><td>${num(r["Actual Mins."])}</td></tr>`).join("");
+
+data.querySelector("tbody").innerHTML=rows.slice(0,500).map(r=>"<tr>"+headers.map(h=>`<td>${r[h]??""}</td>`).join("")+"</tr>").join("");
+
+if(window.c1)c1.destroy(); if(window.c2)c2.destroy();
+c1=new Chart(actualChart,{type:'bar',data:{labels:top.map(x=>x["Name"]),datasets:[{label:'Actual',data:top.map(x=>num(x["Actual Mins."]))}]}});
+c2=new Chart(otChart,{type:'bar',data:{labels:top.map(x=>x["Name"]),datasets:[{label:'OT',data:top.map(x=>num(x["OT Mins."]))}]}});
+
+if(employee.value!=="All" && rows.length){
+ let r=rows[0];
+ profile.innerHTML=`<b>${r["Name"]}</b><br>EMP ID: ${r["EMP ID"]||"-"}<br>Shift: ${r["Shift"]||"-"}<br>TL: ${r["Shift TL"]||"-"}`;
+} else profile.innerHTML="Select an employee";
+}
+
+monthFilter.onchange=applyFilters;
+employee.onchange=applyFilters;
+search.oninput=applyFilters;
 </script>
 </body>
 </html>
