@@ -124,13 +124,8 @@ border:1px solid #ccc;
 </div>
 
 <div class="kpi">
-<h3>Total QC</h3>
-<h2 id="totalQC">0</h2>
-</div>
-
-<div class="kpi">
-<h3>Total Autopix</h3>
-<h2 id="totalAutopix">0</h2>
+<h3>Total OT Mins</h3>
+<h2 id="totalOT">0</h2>
 </div>
 
 <div class="kpi">
@@ -160,10 +155,10 @@ border:1px solid #ccc;
 
 <div class="card">
 
-<h2>📊 QC vs Autopix Editing</h2>
+<h2>⏰ OT Minutes By Employee</h2>
 
 <div class="chart-container">
-<canvas id="qcChart"></canvas>
+<canvas id="otChart"></canvas>
 </div>
 
 </div>
@@ -193,151 +188,146 @@ const CSV_URL =
 
 fetch(CSV_URL)
 
-.then(res=>res.text())
+.then(res => res.text())
 
-.then(csv=>{
+.then(csv => {
 
-const rows=csv.trim().split("\n");
+const rows = csv.trim().split("\n");
 
-const headers=rows[0]
+const headers = rows[0]
 .split(",")
-.map(h=>h.replace(/"/g,"").trim());
+.map(h => h.replace(/"/g,"").trim());
 
-const data=rows.slice(1).map(row=>{
+const data = rows.slice(1).map(row => {
 
-const values=row.split(",");
+const values = row.split(",");
 
-let obj={};
+let obj = {};
 
-headers.forEach((h,i)=>{
-obj[h]=values[i]
-?values[i].replace(/"/g,"").trim()
-:"";
+headers.forEach((h,i) => {
+obj[h] = values[i]
+? values[i].replace(/"/g,"").trim()
+: "";
 });
 
 return obj;
 
 });
 
-const employees=data.filter(
-r=>r["Name"] && r["Name"]!=""
+const employees = data.filter(
+r => r["Name"] && r["Name"] !== ""
 );
 
-const uniqueEmployees=[
-...new Set(employees.map(e=>e["Name"]))
+const uniqueEmployees = [
+...new Set(employees.map(e => e["Name"]))
 ];
 
-const employeeFilter=
+const employeeFilter =
 document.getElementById("employeeFilter");
 
-uniqueEmployees.forEach(emp=>{
+uniqueEmployees.forEach(emp => {
 
-const option=document.createElement("option");
+const option = document.createElement("option");
 
-option.value=emp;
-
-option.textContent=emp;
+option.value = emp;
+option.textContent = emp;
 
 employeeFilter.appendChild(option);
 
 });
 
 document.getElementById("totalEmployees")
-.innerText=uniqueEmployees.length;
+.innerText = uniqueEmployees.length;
 
-const totalActual=employees.reduce(
-(sum,row)=>sum+(Number(row["Actual Mins."])||0),
+const totalActual = employees.reduce(
+(sum,row) => sum + (Number(row["Actual Mins."]) || 0),
 0
 );
 
 document.getElementById("totalActual")
-.innerText=Math.round(totalActual);
+.innerText = Math.round(totalActual);
 
-const totalQC=employees.reduce(
-(sum,row)=>sum+(Number(row["QC / Filteration"])||0),
+const totalOT = employees.reduce(
+(sum,row) => sum + (Number(row["OT Mins"]) || 0),
 0
 );
 
-document.getElementById("totalQC")
-.innerText=totalQC;
+document.getElementById("totalOT")
+.innerText = Math.round(totalOT);
 
-const totalAutopix=employees.reduce(
-(sum,row)=>sum+(Number(row["Autopix Editing"])||0),
-0
-);
-
-document.getElementById("totalAutopix")
-.innerText=totalAutopix;
-
-const attendance=employees.filter(
-row=>row["P"]==="P"
+const attendance = employees.filter(
+row => row["P"] === "P"
 ).length;
 
 document.getElementById("attendance")
-.innerText=attendance;
+.innerText = attendance;
 
-let bestEmployee="";
-let bestScore=0;
+let bestEmployee = "";
+let bestScore = 0;
 
-employees.forEach(emp=>{
+employees.forEach(emp => {
 
-const score=
-Number(emp["Actual Mins."])||0;
+const score =
+Number(emp["Actual Mins."]) || 0;
 
-if(score>bestScore){
+if(score > bestScore){
 
-bestScore=score;
-
-bestEmployee=emp["Name"];
+bestScore = score;
+bestEmployee = emp["Name"];
 
 }
 
 });
 
 document.getElementById("topPerformer")
-.innerText=
-bestEmployee+" ("+bestScore+")";
+.innerText =
+bestEmployee + " (" + bestScore + ")";
 
-let head="<tr>";
+let head = "<tr>";
 
-headers.forEach(h=>{
-head+=`<th>${h}</th>`;
+headers.forEach(h => {
+head += `<th>${h}</th>`;
 });
 
-head+="</tr>";
+head += "</tr>";
 
 document.querySelector("#dataTable thead")
-.innerHTML=head;
+.innerHTML = head;
 
 function renderTable(filtered){
 
-let body="";
+let body = "";
 
-filtered.forEach(row=>{
+filtered.forEach(row => {
 
-body+="<tr>";
+body += "<tr>";
 
-headers.forEach(h=>{
-body+=`<td>${row[h]}</td>`;
+headers.forEach(h => {
+body += `<td>${row[h]}</td>`;
 });
 
-body+="</tr>";
+body += "</tr>";
 
 });
 
 document.querySelector("#dataTable tbody")
-.innerHTML=body;
+.innerHTML = body;
 
 }
 
 renderTable(employees);
 
-const labels=
-employees.map(r=>r["Name"]);
+const labels =
+employees.map(r => r["Name"]);
 
-const actualValues=
+const actualValues =
 employees.map(
-r=>Number(r["Actual Mins."])||0
+r => Number(r["Actual Mins."]) || 0
+);
+
+const otValues =
+employees.map(
+r => Number(r["OT Mins"]) || 0
 );
 
 new Chart(
@@ -350,30 +340,28 @@ datasets:[{
 label:"Actual Mins",
 data:actualValues
 }]
+},
+options:{
+responsive:true,
+maintainAspectRatio:false
 }
 }
 );
 
 new Chart(
-document.getElementById("qcChart"),
+document.getElementById("otChart"),
 {
 type:"bar",
 data:{
 labels:labels,
-datasets:[
-{
-label:"QC",
-data:employees.map(
-r=>Number(r["QC / Filteration"])||0
-)
+datasets:[{
+label:"OT Minutes",
+data:otValues
+}]
 },
-{
-label:"Autopix",
-data:employees.map(
-r=>Number(r["Autopix Editing"])||0
-)
-}
-]
+options:{
+responsive:true,
+maintainAspectRatio:false
 }
 }
 );
@@ -382,13 +370,13 @@ employeeFilter.addEventListener(
 "change",
 function(){
 
-const selected=this.value;
+const selected = this.value;
 
-const filtered=
-selected==="All"
-?employees
-:employees.filter(
-r=>r["Name"]===selected
+const filtered =
+selected === "All"
+? employees
+: employees.filter(
+r => r["Name"] === selected
 );
 
 renderTable(filtered);
@@ -401,13 +389,13 @@ document.getElementById("searchBox")
 "keyup",
 function(){
 
-const search=
+const search =
 this.value.toLowerCase();
 
-const filtered=
+const filtered =
 employees.filter(
-r=>
-(r["Name"]||"")
+r =>
+(r["Name"] || "")
 .toLowerCase()
 .includes(search)
 );
@@ -417,10 +405,17 @@ renderTable(filtered);
 }
 );
 
+})
+
+.catch(error => {
+
+console.error(error);
+
+alert("Error loading CSV data.");
+
 });
 
 </script>
 
 </body>
 </html>
-```
