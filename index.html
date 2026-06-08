@@ -1,490 +1,120 @@
-```html
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Employee Performance Dashboard</title>
-
+<title>Professional Employee Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <style>
-body{
-font-family:Arial,sans-serif;
-background:#f4f6f9;
-margin:0;
-padding:20px;
-}
-
-h1{
-margin-bottom:20px;
-}
-
-.filters{
-display:flex;
-gap:10px;
-flex-wrap:wrap;
-margin-bottom:20px;
-}
-
-select,input{
-padding:10px;
-border:1px solid #ccc;
-border-radius:8px;
-}
-
-.card{
-background:#fff;
-padding:20px;
-border-radius:12px;
-box-shadow:0 2px 10px rgba(0,0,0,.1);
-margin-bottom:20px;
-}
-
-.kpi-container{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-gap:15px;
-}
-
-.kpi{
-background:white;
-padding:15px;
-border-radius:10px;
-box-shadow:0 2px 8px rgba(0,0,0,.08);
-}
-
-.kpi h3{
-margin:0;
-font-size:14px;
-color:#666;
-}
-
-.kpi h2{
-margin-top:8px;
-}
-
-.chart-container{
-height:400px;
-}
-
-table{
-width:100%;
-border-collapse:collapse;
-}
-
-th,td{
-border:1px solid #ddd;
-padding:8px;
-font-size:12px;
-}
-
-th{
-background:#000;
-color:white;
-position:sticky;
-top:0;
-}
-
-.table-container{
-max-height:500px;
-overflow:auto;
-}
+body{margin:0;font-family:Segoe UI,Arial;background:#0f172a;color:#fff}
+.header{padding:20px}
+.filters,.kpis{display:grid;gap:12px}
+.filters{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));padding:0 20px}
+.kpis{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));padding:20px}
+.card{background:#1e293b;border-radius:12px;padding:15px}
+.kpi{background:#111827;border-radius:12px;padding:15px}
+.kpi h4{margin:0;color:#cbd5e1}.kpi h2{margin:8px 0}
+select,input{padding:10px;border-radius:8px;border:none}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:0 20px 20px}
+table{width:100%;border-collapse:collapse}
+th,td{border:1px solid #334155;padding:6px;font-size:12px}
+th{background:#020617;position:sticky;top:0}
+.tbl{max-height:400px;overflow:auto}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
 </style>
 </head>
-
 <body>
-
-<h1>📊 Employee Performance Dashboard</h1>
+<div class="header"><h1>📊 Employee Performance Dashboard</h1></div>
 
 <div class="filters">
-<select id="employeeFilter">
-<option value="All">All Employees</option>
-</select>
-
-<input type="text" id="searchBox" placeholder="Search Employee">
+<select id="employee"><option value="All">All Employees</option></select>
+<input id="search" placeholder="Search employee">
 </div>
 
+<div class="kpis">
+<div class="kpi"><h4>Total Employees</h4><h2 id="emp">0</h2></div>
+<div class="kpi"><h4>Total Actual Mins</h4><h2 id="actual">0</h2></div>
+<div class="kpi"><h4>Total OT Mins</h4><h2 id="ot">0</h2></div>
+<div class="kpi"><h4>Attendance</h4><h2 id="att">0</h2></div>
+<div class="kpi"><h4>Leave</h4><h2 id="leave">0</h2></div>
+<div class="kpi"><h4>Absent</h4><h2 id="absent">0</h2></div>
+<div class="kpi"><h4>Weekoff</h4><h2 id="wo">0</h2></div>
+<div class="kpi"><h4>Holiday</h4><h2 id="holiday">0</h2></div>
+</div>
+
+<div class="grid2">
+<div class="card"><h3>Actual Minutes</h3><canvas id="actualChart"></canvas></div>
+<div class="card"><h3>OT Minutes</h3><canvas id="otChart"></canvas></div>
+</div>
+
+<div class="grid2">
 <div class="card">
-<h2>👤 Employee Profile</h2>
-
-<div class="kpi-container">
-
-<div class="kpi">
-<h3>Name</h3>
-<h2 id="empName">All Employees</h2>
+<h3>Top Performers</h3>
+<div class="tbl"><table id="rank"><thead><tr><th>Rank</th><th>Name</th><th>Actual</th></tr></thead><tbody></tbody></table></div>
 </div>
-
-<div class="kpi">
-<h3>EMP ID</h3>
-<h2 id="empID">-</h2>
-</div>
-
-<div class="kpi">
-<h3>Shift</h3>
-<h2 id="empShift">-</h2>
-</div>
-
-<div class="kpi">
-<h3>Shift TL</h3>
-<h2 id="empTL">-</h2>
-</div>
-
-</div>
-</div>
-
-<div class="kpi-container">
-
-<div class="kpi">
-<h3>Total Employees</h3>
-<h2 id="totalEmployees">0</h2>
-</div>
-
-<div class="kpi">
-<h3>Total Actual Mins</h3>
-<h2 id="totalActual">0</h2>
-</div>
-
-<div class="kpi">
-<h3>Average Actual Mins</h3>
-<h2 id="avgActual">0</h2>
-</div>
-
-<div class="kpi">
-<h3>Total OT Mins</h3>
-<h2 id="totalOT">0</h2>
-</div>
-
-<div class="kpi">
-<h3>Attendance</h3>
-<h2 id="attendance">0</h2>
-</div>
-
-<div class="kpi">
-<h3>Leave</h3>
-<h2 id="leave">0</h2>
-</div>
-
-<div class="kpi">
-<h3>Absent</h3>
-<h2 id="absent">0</h2>
-</div>
-
-<div class="kpi">
-<h3>Weekoff</h3>
-<h2 id="weekoff">0</h2>
-</div>
-
-<div class="kpi">
-<h3>Holiday</h3>
-<h2 id="holiday">0</h2>
-</div>
-
-</div>
-
 <div class="card">
-<h2>🏆 Top Performer</h2>
-<h3 id="topPerformer">Loading...</h3>
-</div>
-
-<div class="card">
-<h2>📈 Actual Minutes Chart</h2>
-<div class="chart-container">
-<canvas id="actualChart"></canvas>
+<h3>Employee Profile</h3>
+<div id="profile">Select an employee</div>
 </div>
 </div>
 
-<div class="card">
-<h2>⏰ OT Minutes Chart</h2>
-<div class="chart-container">
-<canvas id="otChart"></canvas>
-</div>
-</div>
-
-<div class="card">
-<h2>🏅 Employee Ranking</h2>
-
-<table id="rankingTable">
-<thead>
-<tr>
-<th>Rank</th>
-<th>Name</th>
-<th>Actual Mins</th>
-<th>OT Mins</th>
-</tr>
-</thead>
-<tbody></tbody>
-</table>
-
-</div>
-
-<div class="card">
-<h2>📋 Full Data</h2>
-
-<div class="table-container">
-
-<table id="dataTable">
-<thead></thead>
-<tbody></tbody>
-</table>
-
-</div>
+<div class="card" style="margin:20px">
+<h3>Data Table</h3>
+<div class="tbl"><table id="data"><thead></thead><tbody></tbody></table></div>
 </div>
 
 <script>
+const CSV_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vSmMQ61nTN0z7DyrVUJntuEm_zXVbukY5P56YsDU0wlDWhLoybtlVp3kcx96F8ZyD7segyJQlnSKZNq/pub?gid=1309836775&single=true&output=csv";
+let allData=[],headers=[];
+function num(v){return Number(String(v||"0").replace(/,/g,''))||0}
 
-const CSV_URL =
-"https://docs.google.com/spreadsheets/d/e/2PACX-1vSmMQ61nTN0z7DyrVUJntuEm_zXVbukY5P56YsDU0wlDWhLoybtlVp3kcx96F8ZyD7segyJQlnSKZNq/pub?gid=1309836775&single=true&output=csv";
-
-let employees=[];
-
-fetch(CSV_URL)
-.then(r=>r.text())
-.then(csv=>{
-
-const rows=csv.trim().split("\n");
-
-const headers=rows[0]
-.split(",")
-.map(x=>x.replace(/"/g,"").trim());
-
-const data=rows.slice(1).map(row=>{
-
-const values=row.split(",");
-
-let obj={};
-
-headers.forEach((h,i)=>{
-obj[h]=values[i]
-?values[i].replace(/"/g,"").trim()
-:"";
+Papa.parse(CSV_URL,{
+ download:true,header:true,skipEmptyLines:true,
+ complete:r=>{
+  allData=r.data.filter(x=>x["Name"]);
+  headers=Object.keys(allData[0]||{});
+  document.querySelector("#data thead").innerHTML="<tr>"+headers.map(h=>"<th>"+h+"</th>").join("")+"</tr>";
+  [...new Set(allData.map(x=>x["Name"]))].sort().forEach(n=>employee.innerHTML+=`<option>${n}</option>`);
+  render(allData);
+ }
 });
 
-return obj;
+function render(rows){
+ emp.innerText=[...new Set(rows.map(x=>x["Name"]))].length;
+ actual.innerText=Math.round(rows.reduce((s,r)=>s+num(r["Actual Mins."]),0));
+ ot.innerText=Math.round(rows.reduce((s,r)=>s+num(r["OT Mins."]),0));
+ att.innerText=Math.round(rows.reduce((s,r)=>s+num(r["P"]),0));
+ leave.innerText=Math.round(rows.reduce((s,r)=>s+num(r["Leave"]),0));
+ absent.innerText=Math.round(rows.reduce((s,r)=>s+num(r["Absent"]),0));
+ wo.innerText=Math.round(rows.reduce((s,r)=>s+num(r["WO"]),0));
+ holiday.innerText=Math.round(rows.reduce((s,r)=>s+num(r["Holiday"]),0));
 
-});
+ const top=[...rows].sort((a,b)=>num(b["Actual Mins."])-num(a["Actual Mins."])).slice(0,20);
+ rank.querySelector("tbody").innerHTML=top.map((r,i)=>`<tr><td>${i+1}</td><td>${r["Name"]}</td><td>${num(r["Actual Mins."])}</td></tr>`).join("");
 
-employees=data.filter(r=>r["Name"]);
+ data.querySelector("tbody").innerHTML=rows.slice(0,500).map(r=>"<tr>"+headers.map(h=>`<td>${r[h]??""}</td>`).join("")+"</tr>").join("");
 
-const names=[
-...new Set(employees.map(e=>e["Name"]))
-];
+ if(window.c1) c1.destroy();
+ if(window.c2) c2.destroy();
+ c1=new Chart(actualChart,{type:'bar',data:{labels:top.map(x=>x["Name"]),datasets:[{label:'Actual',data:top.map(x=>num(x["Actual Mins."]))}]}});
+ c2=new Chart(otChart,{type:'bar',data:{labels:top.map(x=>x["Name"]),datasets:[{label:'OT',data:top.map(x=>num(x["OT Mins."]))}]}});
 
-names.forEach(name=>{
-employeeFilter.innerHTML +=
-`<option value="${name}">${name}</option>`;
-});
-
-createTableHeaders(headers);
-renderDashboard(employees,headers);
-
-employeeFilter.addEventListener("change",()=>{
-
-const selected=employeeFilter.value;
-
-const filtered=
-selected==="All"
-?employees
-:employees.filter(
-e=>e["Name"]===selected
-);
-
-renderDashboard(filtered,headers);
-
-});
-
-});
-
-function renderDashboard(filtered,headers){
-
-renderTable(filtered,headers);
-renderRanking(filtered);
-
-document.getElementById("totalEmployees").innerText=
-filtered.length;
-
-const totalActual=
-filtered.reduce(
-(s,r)=>s+(Number(r["Actual Mins."])||0),0
-);
-
-document.getElementById("totalActual").innerText=
-Math.round(totalActual);
-
-document.getElementById("avgActual").innerText=
-filtered.length
-?Math.round(totalActual/filtered.length)
-:0;
-
-document.getElementById("totalOT").innerText=
-Math.round(
-filtered.reduce(
-(s,r)=>s+(Number(r["OT Mins."])||0),0
-)
-);
-
-document.getElementById("attendance").innerText=
-filtered.reduce(
-(s,r)=>s+(Number(r["P"])||0),0
-);
-
-document.getElementById("leave").innerText=
-filtered.reduce(
-(s,r)=>s+(Number(r["Leave"])||0),0
-);
-
-document.getElementById("absent").innerText=
-filtered.reduce(
-(s,r)=>s+(Number(r["Absent"])||0),0
-);
-
-document.getElementById("weekoff").innerText=
-filtered.reduce(
-(s,r)=>s+(Number(r["WO"])||0),0
-);
-
-document.getElementById("holiday").innerText=
-filtered.reduce(
-(s,r)=>s+(Number(r["Holiday"])||0),0
-);
-
-if(filtered.length===1){
-
-document.getElementById("empName").innerText=
-filtered[0]["Name"];
-
-document.getElementById("empID").innerText=
-filtered[0]["EMP ID"] || "-";
-
-document.getElementById("empShift").innerText=
-filtered[0]["Shift"] || "-";
-
-document.getElementById("empTL").innerText=
-filtered[0]["Shift TL"] || "-";
-
+ if(rows.length===1){
+   let r=rows[0];
+   profile.innerHTML=`<b>${r["Name"]}</b><br>EMP ID: ${r["EMP ID"]||"-"}<br>Shift: ${r["Shift"]||"-"}<br>TL: ${r["Shift TL"]||"-"}<br>Actual: ${r["Actual Mins."]||0}<br>OT: ${r["OT Mins."]||0}`;
+ } else profile.innerHTML="Select an employee";
 }
 
-let top=filtered.sort(
-(a,b)=>
-(Number(b["Actual Mins."])||0)
--
-(Number(a["Actual Mins."])||0)
-)[0];
-
-document.getElementById("topPerformer").innerText=
-top
-?`${top["Name"]} (${top["Actual Mins."]})`
-:"-";
-
-drawCharts(filtered);
-
-}
-
-function drawCharts(data){
-
-if(window.actualChart)
-window.actualChart.destroy();
-
-if(window.otChart)
-window.otChart.destroy();
-
-window.actualChart=new Chart(
-document.getElementById("actualChart"),
-{
-type:"bar",
-data:{
-labels:data.map(x=>x["Name"]),
-datasets:[{
-label:"Actual Minutes",
-data:data.map(
-x=>Number(x["Actual Mins."])||0
-)
-}]
-}
-}
-);
-
-window.otChart=new Chart(
-document.getElementById("otChart"),
-{
-type:"bar",
-data:{
-labels:data.map(x=>x["Name"]),
-datasets:[{
-label:"OT Minutes",
-data:data.map(
-x=>Number(x["OT Mins."])||0
-)
-}]
-}
-}
-);
-
-}
-
-function renderRanking(data){
-
-const sorted=[...data].sort(
-(a,b)=>
-(Number(b["Actual Mins."])||0)
--
-(Number(a["Actual Mins."])||0)
-);
-
-let html="";
-
-sorted.forEach((r,i)=>{
-
-html+=`
-<tr>
-<td>${i+1}</td>
-<td>${r["Name"]}</td>
-<td>${r["Actual Mins."]||0}</td>
-<td>${r["OT Mins."]||0}</td>
-</tr>
-`;
-
-});
-
-document.querySelector(
-"#rankingTable tbody"
-).innerHTML=html;
-
-}
-
-function createTableHeaders(headers){
-
-document.querySelector(
-"#dataTable thead"
-).innerHTML=
-"<tr>"+headers.map(
-h=>`<th>${h}</th>`
-).join("")+"</tr>";
-
-}
-
-function renderTable(data,headers){
-
-let html="";
-
-data.forEach(r=>{
-
-html+="<tr>";
-
-headers.forEach(h=>{
-html+=`<td>${r[h]||""}</td>`;
-});
-
-html+="</tr>";
-
-});
-
-document.querySelector(
-"#dataTable tbody"
-).innerHTML=html;
-
-}
+employee.onchange=()=>{
+ const v=employee.value;
+ render(v==="All"?allData:allData.filter(x=>x["Name"]===v));
+};
+search.oninput=()=>{
+ const s=search.value.toLowerCase();
+ render(allData.filter(x=>(x["Name"]||"").toLowerCase().includes(s)));
+};
 </script>
-
 </body>
 </html>
