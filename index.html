@@ -517,57 +517,50 @@ otChartObj.destroy();
 
 actualChartObj =
 new Chart(
-document.getElementById(
-"actualChart"
-),
+document.getElementById("actualChart"),
 {
 type:"bar",
 data:{
 labels:
-top.map(
-x=>x["Date"]
-),
+chartRows.map(x=>x["Date"]),
 datasets:[
 {
-label:
-"Actual Working Mins",
+label:"Actual Working Mins",
 data:
-top.map(
-x =>
-num(
-x["Actual Working Mins."]
-)
+chartRows.map(
+x=>num(x["Actual Working Mins."])
 )
 }
 ]
+},
+options:{
+responsive:true,
+maintainAspectRatio:false
 }
 }
 );
 
 otChartObj =
 new Chart(
-document.getElementById(
-"otChart"
-),
+document.getElementById("otChart"),
 {
 type:"bar",
 data:{
 labels:
-top.map(
-x=>x["Date"]
-),
+chartRows.map(x=>x["Date"]),
 datasets:[
 {
 label:"OT Mins",
 data:
-top.map(
-x =>
-num(
-x["OT Mins."]
-)
+chartRows.map(
+x=>num(x["OT Mins."])
 )
 }
 ]
+},
+options:{
+responsive:true,
+maintainAspectRatio:false
 }
 }
 );
