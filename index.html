@@ -466,19 +466,15 @@ num(row["WO"]),
 )
 );
 
-const top =
-[...rows]
-.sort(
-(a,b)=>
-num(
-b["Actual Working Mins."]
-)
--
-num(
-a["Actual Working Mins."]
-)
-)
-.slice(0,20);
+const chartData = [...rows]
+.sort((a, b) => {
+
+    const dateA = new Date(a["Date"]);
+    const dateB = new Date(b["Date"]);
+
+    return dateA - dateB; // Ascending order
+
+});
 
 rankingBody.innerHTML =
 top.map(
@@ -513,26 +509,16 @@ otChartObj.destroy();
 
 actualChartObj =
 new Chart(
-document.getElementById(
-"actualChart"
-),
+document.getElementById("actualChart"),
 {
 type:"bar",
 data:{
-labels:
-top.map(
-x=>x["Date"]
-),
+labels: chartData.map(x => x["Date"]),
 datasets:[
 {
-label:
-"Actual Working Mins",
-data:
-top.map(
-x =>
-num(
-x["Actual Working Mins."]
-)
+label:"Actual Working Mins",
+data: chartData.map(x =>
+num(x["Actual Working Mins."])
 )
 }
 ]
@@ -542,25 +528,16 @@ x["Actual Working Mins."]
 
 otChartObj =
 new Chart(
-document.getElementById(
-"otChart"
-),
+document.getElementById("otChart"),
 {
 type:"bar",
 data:{
-labels:
-top.map(
-x=>x["Date"]
-),
+labels: chartData.map(x => x["Date"]),
 datasets:[
 {
 label:"OT Mins",
-data:
-top.map(
-x =>
-num(
-x["OT Mins."]
-)
+data: chartData.map(x =>
+num(x["OT Mins."])
 )
 }
 ]
