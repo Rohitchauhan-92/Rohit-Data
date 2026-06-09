@@ -466,20 +466,24 @@ num(row["WO"]),
 )
 );
 
+const chartRows =
+[...rows].sort((a,b)=>{
+
+const dateA = new Date(a["Date"]);
+const dateB = new Date(b["Date"]);
+
+return dateA - dateB;
+
+});
 const top =
 [...rows]
 .sort(
 (a,b)=>
-num(
-b["Actual Working Mins."]
-)
--
-num(
-a["Actual Working Mins."]
-)
+num(b["Actual Working Mins."]) -
+num(a["Actual Working Mins."])
 )
 .slice(0,20);
-
+  
 rankingBody.innerHTML =
 top.map(
 (r,i)=>
