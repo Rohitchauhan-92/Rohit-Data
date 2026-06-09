@@ -466,20 +466,14 @@ num(row["WO"]),
 )
 );
 
-const top =
-[...rows]
-.sort(
-(a,b)=>
-num(
-b["Actual Working Mins."]
-)
--
-num(
-a["Actual Working Mins."]
-)
-)
-.slice(0,20);
+const chartRows = [...rows].sort((a,b)=>{
 
+const dateA = new Date(a["Date"]);
+const dateB = new Date(b["Date"]);
+
+return dateA - dateB;
+
+});
 rankingBody.innerHTML =
 top.map(
 (r,i)=>
@@ -513,61 +507,69 @@ otChartObj.destroy();
 
 actualChartObj =
 new Chart(
-document.getElementById(
-"actualChart"
-),
+document.getElementById("actualChart"),
 {
 type:"bar",
 data:{
-labels:
-top.map(
-x=>x["Date"]
-),
-datasets:[
-{
-label:
-"Actual Working Mins",
-data:
-top.map(
-x =>
-num(
-x["Actual Working Mins."]
+labels: chartRows.map(x => x["Date"]),
+datasets:[{
+label:"Actual Working Mins",
+data: chartRows.map(
+x => num(x["Actual Working Mins."])
 )
-)
+}]
+},
+options:{
+responsive:true,
+plugins:{
+legend:{
+display:true
 }
-]
+},
+scales:{
+x:{
+ticks:{
+maxRotation:45,
+minRotation:45
+}
+}
+}
 }
 }
 );
 
 otChartObj =
 new Chart(
-document.getElementById(
-"otChart"
-),
+document.getElementById("otChart"),
 {
 type:"bar",
 data:{
-labels:
-top.map(
-x=>x["Date"]
-),
-datasets:[
-{
+labels: chartRows.map(x => x["Date"]),
+datasets:[{
 label:"OT Mins",
-data:
-top.map(
-x =>
-num(
-x["OT Mins."]
+data: chartRows.map(
+x => num(x["OT Mins."])
 )
-)
+}]
+},
+options:{
+responsive:true,
+plugins:{
+legend:{
+display:true
 }
-]
+},
+scales:{
+x:{
+ticks:{
+maxRotation:45,
+minRotation:45
+}
+}
+}
 }
 }
 );
-
 if(
 employeeFilter.value !== "All"
 &&
