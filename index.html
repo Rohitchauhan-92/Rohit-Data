@@ -427,10 +427,11 @@ Math.round(
 rows.reduce((sum,row)=>{
 
 const val =
-String(row["Actual Working Mins."] || "")
+String(row["Column O Header Name"] || "")
 .trim();
 
 if(
+val === "" ||
 val.toLowerCase() === "leave" ||
 val.toLowerCase() === "absent" ||
 val.toLowerCase() === "wo"
@@ -438,7 +439,11 @@ val.toLowerCase() === "wo"
 return sum;
 }
 
-return sum + num(val);
+if(isNaN(Number(val))){
+return sum;
+}
+
+return sum + Number(val);
 
 },0)
 );
