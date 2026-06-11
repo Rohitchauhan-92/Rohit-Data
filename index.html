@@ -166,6 +166,11 @@ placeholder="Search Employee">
 </div>
 
 <div class="kpi">
+<h4>Total Present Days</h4>
+<h2 id="presentDays">0</h2>
+</div> 
+    
+<div class="kpi">
 <h4>Total Leave</h4>
 <h2 id="leaveCount">0</h2>
 </div>
@@ -444,6 +449,24 @@ row["OT Mins."]
 0
 )
 );
+
+presentDays.innerText =
+rows.filter(row => {
+
+const val =
+String(row["Actual Working Mins."] || "")
+trim()
+.toLowerCase();
+
+return (
+val !== "leave" &&
+val !== "absent" &&
+val !== "wo" &&
+!isNaN(Number(val)) &&
+Number(val) > 0
+);
+
+}).length;    
 
 leaveCount.innerText =
 rows.filter(row =>
