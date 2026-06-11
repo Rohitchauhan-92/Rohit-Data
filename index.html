@@ -527,19 +527,55 @@ String(x["Actual Working Mins."] || "")
 .trim()
 .toLowerCase();
 
-if(
-val === "leave" ||
-val === "absent" ||
-val === "wo"
-){
-return 0;
-}
+if(val === "leave") return 50;
+if(val === "absent") return 50;
+if(val === "wo") return 50;
 
 return num(x["Actual Working Mins."]);
+
+}),
+backgroundColor: chartData.map(x => {
+
+const val =
+String(x["Actual Working Mins."] || "")
+.trim()
+.toLowerCase();
+
+if(val === "leave") return "#f59e0b"; // Orange
+if(val === "absent") return "#ef4444"; // Red
+if(val === "wo") return "#22c55e"; // Green
+
+return "#3b82f6"; // Blue
 
 })
 }
 ]
+},
+options:{
+plugins:{
+tooltip:{
+callbacks:{
+label:function(context){
+
+const row = chartData[context.dataIndex];
+
+const val =
+String(row["Actual Working Mins."] || "")
+.trim();
+
+if(
+val.toLowerCase() === "leave" ||
+val.toLowerCase() === "absent" ||
+val.toLowerCase() === "wo"
+){
+return val;
+}
+
+return "Actual Working Mins: " + context.raw;
+}
+}
+}
+}
 }
 }
 );
