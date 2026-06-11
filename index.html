@@ -424,14 +424,23 @@ x => x["Name"]
 
 actualMins.innerText =
 Math.round(
-rows.reduce(
-(sum,row)=>
-sum +
-num(
-row["Total Working Mins. without OT"] || 0
-),
-0
-)
+rows.reduce((sum,row)=>{
+
+const val =
+String(row["Actual Working Mins."] || "")
+.trim();
+
+if(
+val.toLowerCase() === "leave" ||
+val.toLowerCase() === "absent" ||
+val.toLowerCase() === "wo"
+){
+return sum;
+}
+
+return sum + num(val);
+
+},0)
 );
 
 const validWorkingRows = rows.filter(row => {
