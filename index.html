@@ -161,6 +161,11 @@ placeholder="Search Employee">
 </div>
 
 <div class="kpi">
+<h4>Avg Working Mins</h4>
+<h2 id="avgWorkingMins">0</h2>
+</div> 
+    
+<div class="kpi">
 <h4>Total OT Mins</h4>
 <h2 id="otMins">0</h2>
 </div>
@@ -437,6 +442,35 @@ return sum + num(val);
 
 },0)
 );
+
+const validWorkingRows = rows.filter(row => {
+
+const val =
+String(row["Actual Working Mins."] || "")
+.trim()
+.toLowerCase();
+
+return (
+val !== "" &&
+val !== "leave" &&
+val !== "absent" &&
+val !== "wo" &&
+!isNaN(Number(val)) &&
+Number(val) > 0
+);
+
+});
+
+avgWorkingMins.innerText =
+validWorkingRows.length
+? Math.round(
+validWorkingRows.reduce(
+(sum,row) =>
+sum + num(row["Actual Working Mins."]),
+0
+) / validWorkingRows.length
+)
+: 0;    
 
 otMins.innerText =
 Math.round(
