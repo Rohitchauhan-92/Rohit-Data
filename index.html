@@ -414,14 +414,23 @@ x => x["Name"]
 
 actualMins.innerText =
 Math.round(
-rows.reduce(
-(sum,row)=>
-sum +
-num(
-row["Actual Working Mins."]
-),
-0
-)
+rows.reduce((sum,row)=>{
+
+const val =
+String(row["Actual Working Mins."] || "")
+.trim();
+
+if(
+val.toLowerCase() === "leave" ||
+val.toLowerCase() === "absent" ||
+val.toLowerCase() === "wo"
+){
+return sum;
+}
+
+return sum + num(val);
+
+},0)
 );
 
 otMins.innerText =
@@ -437,34 +446,25 @@ row["OT Mins."]
 );
 
 leaveCount.innerText =
-Math.round(
-rows.reduce(
-(sum,row)=>
-sum +
-num(row["Leave"]),
-0
-)
-);
+rows.filter(row =>
+String(row["Actual Working Mins."] || "")
+.trim()
+.toLowerCase() === "leave"
+).length;
 
 absentCount.innerText =
-Math.round(
-rows.reduce(
-(sum,row)=>
-sum +
-num(row["Absent"]),
-0
-)
-);
+rows.filter(row =>
+String(row["Actual Working Mins."] || "")
+.trim()
+.toLowerCase() === "absent"
+).length;
 
 woCount.innerText =
-Math.round(
-rows.reduce(
-(sum,row)=>
-sum +
-num(row["WO"]),
-0
-)
-);
+rows.filter(row =>
+String(row["Actual Working Mins."] || "")
+.trim()
+.toLowerCase() === "wo"
+).length;
 
 const chartData = [...rows]
 .sort((a, b) => {
@@ -520,9 +520,24 @@ labels: chartData.map(x => x["Date"]),
 datasets:[
 {
 label:"Actual Working Mins",
-data: chartData.map(x =>
-num(x["Actual Working Mins."])
-)
+data: chartData.map(x => {
+
+const val =
+String(x["Actual Working Mins."] || "")
+.trim()
+.toLowerCase();
+
+if(
+val === "leave" ||
+val === "absent" ||
+val === "wo"
+){
+return 0;
+}
+
+return num(x["Actual Working Mins."]);
+
+})
 }
 ]
 }
