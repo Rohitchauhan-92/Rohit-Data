@@ -631,9 +631,44 @@ rows.length
 const emp =
 rows[0];
 
+const empRows = rows.filter(
+r => r["Name"] === employeeFilter.value
+);
+
+const validRows = empRows.filter(r => {
+
+const val =
+String(r["Actual Working Mins."] || "")
+.trim()
+.toLowerCase();
+
+return (
+val !== "" &&
+val !== "leave" &&
+val !== "absent" &&
+val !== "wo" &&
+!isNaN(Number(val)) &&
+Number(val) > 0
+);
+
+});
+
+const totalWorkingMins =
+validRows.reduce(
+(sum,r) =>
+sum + num(r["Actual Working Mins."]),
+0
+);
+
+const avgWorkingMins =
+validRows.length
+? Math.round(totalWorkingMins / validRows.length)
+: 0;
+
 profile.innerHTML =
 `
 <b>${emp["Name"]}</b><br>
+
 EMP ID:
 ${emp["EMP ID"] || "-"}<br>
 
@@ -643,13 +678,20 @@ ${emp["Shift"] || "-"}<br>
 Shift TL:
 ${emp["Shift TL"] || "-"}<br>
 
-Actual Working Mins:
-${emp["Actual Working Mins."] || 0}<br>
+Average Working Mins:
+${avgWorkingMins}<br>
+
+Present Days:
+${validRows.length}<br>
 
 OT Mins:
-${emp["OT Mins."] || 0}
+${Math.round(
+empRows.reduce(
+(sum,r)=>sum + num(r["OT Mins."]),
+0
+)
+)}
 `;
-
 }else{
 
 profile.innerHTML =
