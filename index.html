@@ -455,7 +455,7 @@ rows.filter(row => {
 
 const val =
 String(row["Actual Working Mins."] || "")
-trim()
+.trim()
 .toLowerCase();
 
 return (
